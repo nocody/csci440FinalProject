@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html>
+
+<script id="vertex-shader" type="x-shader/x-vertex">
+//Original
+// attribute vec4 vPosition;
+//
+// uniform mat4 modelViewMatrix;
+// uniform mat4 projectionMatrix;
+
+//From 3D1
+attribute  vec4 vPosition;
+attribute  vec3 vNormal;
+varying vec4 fColor;
+
+uniform vec4 ambientProduct, diffuseProduct, specularProduct;
+uniform mat4 modelViewMatrix;
+uniform mat4 projectionMatrix;
+uniform vec4 lightPosition;
+uniform float shininess;
+
+uniform float theta2;
+
+
+
+//Original
+//
+// void main()
+// {
+//     gl_Position = projectionMatrix * modelViewMatrix * vPosition;
+// }
+//From 3C1
+void main()
+{
+    float pct = abs(cos(theta2/300.0));
+    float s = abs(sin(theta2/100.0));
+  //  float s3 = sin(theta3/100.0);
+    float c = abs(cos(theta2/100.0));
+    float t = abs(tan(theta2/100.0));
+    vec3 pos = -(modelViewMatrix * vPosition).xyz;
+
+    //fixed light postion
+    vec3 light = lightPosition.xyz;
+    vec3 L = normalize( light - pos );
+
+    vec3 E = normalize( -pos );
+    vec3 H = normalize( L + E );
+
+    vec4 NN = vec4(vNormal,0);
+
+    // Transform vertex normal into eye coordinates
+    vec3 N = normalize( (modelViewMatrix*NN).xyz);
+
+    // Compute terms in the illumination equation
+    vec4 ambient = ambientProduct;
+
+    float Kd = max( dot(L, N), 0.0 );
+    vec4 diffuse = Kd * diffuseProduct;
+
+    float Ks = pow( max(dot(N, H), 0.0), shininess );
+    vec4 specular = Ks * specularProduct;
+
+    if( dot(L, N) < 0.0 ) {
+		specular = vec4(0.0, 0.0, 0.0, 1.0);
+    }
+
+    gl_Position = projectionMatrix * modelViewMatrix * vPosition;
+
+    // fColor = ambient + diffuse + specular;
+    // fColor.a = 1.0;
+    vec4 b = vec4(s, c, t, 1.0);
+    vec4 color = ambient + diffuse + specular;
+    color.a = 1.0;
+    fColor = mix(b, color, pct);
+
+}
+</script>
+
+<script id="fragment-shader" type="x-shader/x-fragment">
+
+precision mediump float;
+
+varying vec4 fColor;
+
+void main()
+{
+
+    gl_FragColor = fColor;
+}
+</script>
+
+<script type="text/javascript" src="../Common/webgl-utils.js"></script>
+<script type="text/javascript" src="../Common/InitShaders.js"></script>
+<script type="text/javascript" src="../Common/MV.js"></script>
+<script type="text/javascript" src="csci440final.js"></script>
+
+
+<p> </p>
+
+
+<div id="crab">
+  Crab
+  <button id ="crawlC">Crawl</button>
+  <button id ="swimC">Swim</button>
+</div>
+<div id="octopus">
+  Octopus
+  <button id ="crawlO">Crawl</button>
+  <button id ="swimO">Swim</button>
+</div>
+<div>
+  Both
+  <button id ="shunt">Hunt (Success)</button>
+  <button id ="fhunt">Hunt (Failure)</button>
+  <button id ="dance">Dance Party</button>
+  <button id ="reset">Reset</button>
+</div>
+
+
+<body>
+<canvas id="gl-canvas" width="1024" height="1024">
+Oops ... your browser doesn't support the HTML5 canvas element
+</canvas>
+</body>
+</html>
